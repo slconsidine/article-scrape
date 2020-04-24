@@ -7,29 +7,44 @@ var db = require("./models");
 
 var PORT = 3000;
 
+
 var app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static("public"));
 
-mongoose.connect("mongodb://localhost/article-scraper", { useNewUrlParser: true });
+var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/article-scraper";
+mongoose.connect(MONGODB_URI);
+// mongoose.connect("mongodb://localhost/article-scraper", { useNewUrlParser: true });
 
 // get route for scraping the website
 app.get("/scrape", function(req, res) {
-    axios.get("https://news.disney.com/")
+    axios.get("https://buzzfeed.com/")
     .then(function(response) {
         var $ = cheerio.load(response.data);
 
-        $(".item-container h2").each(function(i, element) {
+        // $(".item-container").each(function(i, element) {
+        //     var result = {};
+        //     result.title = $(this)
+        //         .children(".skip-link-style a")
+        //         .attr("title");
+        //     result.link = $(this)
+        //         .children(".skip-link-style a")
+        //         .attr("href");
+        //     result.date = $(this)
+        //         .children(".publish-date p")
+        //         .text();
+
+        $("article h2").each(function(i, element) {
             var result = {};
             result.title = $(this)
-                .children("a .skip-link-style")
-                .attr("title");
+                .children("a")
+                .text();
             result.link = $(this)
-                .children("a .skip-link-style")
+                .children("a")
                 .attr("href");
-            result.date = $(this)
-                .children("p .publish-date")
+            result.summary = $(this)
+                .siblings("p")
                 .text();
 
             db.Article.create(result)
@@ -46,7 +61,7 @@ app.get("/scrape", function(req, res) {
 // get route for showing all articles in the database
 app.get("/articles", function(req, res) {
     db.Article.find({})
-        .then(function(dbArtile) {
+        .then(function(dbArticle) {
             res.json(dbArticle)
         }).catch(function(err) {
             res.json(err);
