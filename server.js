@@ -1,4 +1,5 @@
 var express = require("express");
+var exphbs = require("express-handlebars");
 var mongoose = require ("mongoose");
 var axios = require("axios");
 var cheerio = require("cheerio");
@@ -17,23 +18,14 @@ var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/article-scrape
 mongoose.connect(MONGODB_URI);
 // mongoose.connect("mongodb://localhost/article-scraper", { useNewUrlParser: true });
 
+app.engine("handlebars", exphbs({ defaultLayout: "main" }));
+app.set("view engine", "handlebars");
+
 // get route for scraping the website
 app.get("/scrape", function(req, res) {
     axios.get("https://buzzfeed.com/")
     .then(function(response) {
         var $ = cheerio.load(response.data);
-
-        // $(".item-container").each(function(i, element) {
-        //     var result = {};
-        //     result.title = $(this)
-        //         .children(".skip-link-style a")
-        //         .attr("title");
-        //     result.link = $(this)
-        //         .children(".skip-link-style a")
-        //         .attr("href");
-        //     result.date = $(this)
-        //         .children(".publish-date p")
-        //         .text();
 
         $("article h2").each(function(i, element) {
             var result = {};
@@ -54,42 +46,57 @@ app.get("/scrape", function(req, res) {
                 console.log(err);
             });
         });
-        res.send("Scrape Complete");
-    });
+            res.send("Scrape Complete");
+        });
 });
-
+    
 // get route for showing all articles in the database
 app.get("/articles", function(req, res) {
     db.Article.find({})
-        .then(function(dbArticle) {
-            res.json(dbArticle)
-        }).catch(function(err) {
-            res.json(err);
-        });
+    .then(function(dbArticle) {
+        res.json(dbArticle)
+    }).catch(function(err) {
+        res.json(err);
+    });
 });
-
+    
 // get route for specific article by id, populate it with it's note
 app.get("/articles/:id", function(req, res) {
     db.Article.findOne({ _id: req.params.id })
-        .populate("note")
+    .populate("note")
+    .then(function(dbArticle) {
+        res.json(dbArticle);
+    }).catch(function(err) {
+        res.json(err);
+    });
+});
+    
+// post route for saving/updating an article's note
+app.post("/articles/:id", function(req, res) {
+    db.Note.create(req.body)
+    .then(function(dbNote) {
+        return db.Article.findOneAndUpdate({ _id: req.params.id }, { note: dbNote._id }, { new: true });
+    }).then(function(dbArticle) {
+        res.json(dbArticle);
+    }).catch(function(err) {
+        res.json(err);
+    });
+});
+
+app.get("/", function(req, res) {
+    res.render("index");
+
+    db.Article.find({})
         .then(function(dbArticle) {
-            res.json(dbArticle);
+            res.render("index", {
+                msg: "Welcome!",
+                article: dbArticle
+            });
         }).catch(function(err) {
             res.json(err);
         });
 });
 
-// post route for saving/updating an article's note
-app.post("/articles/:id", function(req, res) {
-    db.Note.create(req.body)
-        .then(function(dbNote) {
-            return db.Article.findOneAndUpdate({ _id: req.params.id }, { note: dbNote._id }, { new: true });
-        }).then(function(dbArticle) {
-            res.json(dbArticle);
-        }).catch(function(err) {
-            res.json(err);
-        });
-});
 
 app.listen(PORT, function() {
     console.log("App running on port " + PORT);
