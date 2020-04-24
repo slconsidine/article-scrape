@@ -86,15 +86,15 @@ app.post("/articles/:id", function(req, res) {
 app.get("/", function(req, res) {
     res.render("index");
 
-    db.Article.find({})
-        .then(function(dbArticle) {
-            res.render("index", {
-                msg: "Welcome!",
-                article: dbArticle
-            });
-        }).catch(function(err) {
-            res.json(err);
-        });
+    // db.Article.find({})
+    //     .then(function(dbArticle) {
+    //         res.render("index", {
+    //             msg: "Welcome!",
+    //             article: dbArticle
+    //         });
+    //     }).catch(function(err) {
+    //         res.json(err);
+    //     });
 });
 
 
