@@ -39,14 +39,20 @@ app.get("/scrape", function(req, res) {
                 .siblings("p")
                 .text();
 
-            db.Article.create(result)
-            .then(function(dbArticle) {
-                console.log(dbArticle);
-            }).catch(function(err) {
-                console.log(err);
+            db.Article.find({title: result.title}, function(err, docs) {
+                if (docs.length) {
+                    console.log("article already exists")
+                } else {
+                    db.Article.create(result)
+                    .then(function(dbArticle) {
+                        console.log(dbArticle);
+                    }).catch(function(err) {
+                        console.log(err);
+                    });
+                }
             });
         });
-            res.send("Scrape Complete");
+            // res.send("Scrape Complete");
         });
 });
     
