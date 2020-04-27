@@ -1,11 +1,11 @@
 // grabs the articles as a JSON
 $.getJSON("/articles", function(data) {
     for (var i = 0; i < data.length; i++) {
-        $("#articles").append("<p data-id='" + data[i]._id + "'>" + data[i].title + "<br />" + data[i].link + "<br />" + data[i].summary + "</p>");
+        $("#articles").append("<div id='article' data-id='" + data[i]._id + "'>" + "<h3>" + data[i].title + "</h3>"+ "<br />" + "<a target='blank' href='"+ data[i].link + "'>Article Link</a>" + "<br />" + "<p>" + data[i].summary + "</p>" + "<hr>" +"</div>");
     }
 });
 
-$(document).on("click", "p", function() {
+$(document).on("click", "#article", function() {
     $("#notes").empty();
     var thisId = $(this).attr("data-id");
 

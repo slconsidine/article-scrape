@@ -52,6 +52,7 @@ app.get("/scrape", function(req, res) {
                 }
             });
         });
+            res.render("index");
             // res.send("Scrape Complete");
         });
 });
